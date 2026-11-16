@@ -1,0 +1,306 @@
+@import "tailwindcss";
+
+/* One typeface for the whole portal, on screen and on paper. Overriding the
+   theme fonts covers the default text as well as every font-sans / font-mono
+   class already used in the pages. */
+@theme {
+  --font-sans: "Times New Roman", Times, "Liberation Serif", serif;
+  --font-serif: "Times New Roman", Times, "Liberation Serif", serif;
+  --font-mono: "Times New Roman", Times, "Liberation Serif", serif;
+}
+
+/* ── Soft-white theme ────────────────────────────────────────────────────────
+   Design tokens for the whole portal. Pages use Tailwind's neutral scale,
+   which lines up with these values (neutral-50 = page, white = surface,
+   neutral-900 = text / primary button, neutral-200 = border). */
+:root {
+  --page: #fafafa;
+  --surface: #ffffff;
+  --text: #171717;
+  --text-secondary: #525252;
+  --text-muted: #737373;
+  --border: #e5e5e5;
+  --border-strong: #a3a3a3;
+  --hover: #f5f5f5;
+  --primary: #171717;
+  --primary-hover: #404040;
+  --focus-ring: rgba(23, 23, 23, 0.18);
+  --danger: #dc2626;
+  color-scheme: light;
+}
+
+html,
+body {
+  background-color: var(--page);
+  color: var(--text);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+@layer base {
+  /* Every form control is white with black text, whatever the page gives it. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    background-color: var(--surface);
+    color: var(--text);
+    border-color: var(--border);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-muted);
+    opacity: 1;
+  }
+
+  input:hover:not(:disabled):not(:focus),
+  select:hover:not(:disabled):not(:focus),
+  textarea:hover:not(:disabled):not(:focus) {
+    border-color: var(--border-strong);
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--text);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+    outline: none;
+  }
+
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    background-color: var(--hover);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  input:user-invalid,
+  select:user-invalid,
+  textarea:user-invalid {
+    border-color: var(--danger);
+  }
+
+  option {
+    background-color: var(--surface);
+    color: var(--text);
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--primary);
+  }
+
+  input[type="file"]::file-selector-button {
+    margin-right: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+
+  input[type="file"]::file-selector-button:hover {
+    background: var(--hover);
+  }
+
+  /* Keyboard focus is always visible. */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+  }
+
+  button {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+  }
+
+  /* Pressed feedback on every button. */
+  button:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .field {
+    @apply w-full rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm text-neutral-900;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-neutral-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-neutral-700 disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-white px-4 py-2.5 text-sm font-semibold text-neutral-900 hover:bg-neutral-100 disabled:opacity-60;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60;
+  }
+
+  /* Inline loading indicator; inherits the text colour of its button. */
+  .spinner {
+    @apply inline-block h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-current border-t-transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Spinners still need to read as "busy". */
+  .spinner,
+  .animate-spin {
+    animation-duration: 1.2s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
+
+.inputbox {
+  @apply w-full bg-white text-neutral-900 rounded-lg px-4 py-3 mt-1 border border-neutral-200;
+}
+
+.section {
+  @apply bg-white p-4 rounded-lg border border-neutral-200;
+}
+
+.section h3 {
+  @apply text-lg font-semibold text-neutral-900 mb-2;
+}
+
+.status {
+  @apply px-2 py-0.5 text-xs font-semibold rounded-full text-white;
+}
+
+.date-picker-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.date-picker-icon {
+  position: absolute;
+  right: 10px;
+  color: var(--text-secondary);
+  pointer-events: none;
+  font-size: 1.1rem;
+}
+
+.premium-date-input {
+  width: 100%;
+  padding-left: 0.75rem;
+  padding-right: 2.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.premium-date-input:focus {
+  border-color: var(--text);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ── Printing ────────────────────────────────────────────────────────────────
+   utils/print.js clones the document being printed into #print-root (a direct
+   child of <body>). On paper only that clone is shown, so invoices, ledgers and
+   statements print clean on A4 across as many pages as they need, without the
+   app chrome and without being clipped by a modal. */
+#print-root {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  body > *:not(#print-root) {
+    display: none !important;
+  }
+
+  #print-root {
+    display: block;
+    color: #0f172a;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  #print-root .no-print {
+    display: none !important;
+  }
+
+  #print-root .print-sheet {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  #print-root .overflow-x-auto {
+    overflow: visible !important;
+  }
+
+  #print-root table {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  #print-root thead {
+    display: table-header-group;
+  }
+
+  #print-root tr,
+  #print-root .avoid-break {
+    break-inside: avoid;
+  }
+}
+
+.premium-date-input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  height: auto;
+  color: transparent;
+  background: transparent;
+  cursor: pointer;
+}

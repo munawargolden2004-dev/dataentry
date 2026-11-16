@@ -1,0 +1,77 @@
+rules_version = '2';
+
+// ==========================================================================
+// Data Dash Portal — Firestore Security Rules (roles + agencies, Req 6)
+//
+// Model: any ACTIVE staff member (has a users/{uid} profile, not disabled) can
+// read/write the booking collections. Only a SUPER ADMIN can write user
+// profiles (prevents role self-escalation) and manage agencies.
+//
+// This is Phase 1 (single-tenant-safe, compatible with existing data). Phase 2
+// (per-agency isolation) would add an agencyId check on each booking rule once
+// every booking doc carries an agencyId — see note at the bottom.
+// ==========================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn()   { return request.auth != null; }
+    function hasProfile() { return exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function profile()    { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function activeUser() { return signedIn() && hasProfile() && profile().disabled != true; }
+    function isSuperAdmin(){ return activeUser() && profile().role == 'superadmin'; }
+    function isAdmin()     { return activeUser() && profile().role == 'admin'; }
+
+    // ---- Booking, Invoicing & Expenses data: any active staff member ----
+    match /bookings/{id}          { allow read, write: if activeUser(); }
+    match /ticketBookings/{id}    { allow read, write: if activeUser(); }
+    match /HotelBookings/{id}     { allow read, write: if activeUser(); }
+    match /ummrahBookings/{id}    { allow read, write: if activeUser(); }
+    match /medical_insurance/{id} { allow read, write: if activeUser(); }
+    match /deletedBookings/{id}   { allow read, write: if activeUser(); }
+    match /invoices/{id}          { allow read, write: if activeUser(); }
+    match /expenses/{id}          { allow read, write: if activeUser(); }
+
+    // ---- Ledgers & bank: vendors/agents/clients, accounts, money movements ----
+    match /parties/{id}           { allow read, write: if activeUser(); }
+    match /accounts/{id}          { allow read, write: if activeUser(); }
+    match /transactions/{id}      { allow read, write: if activeUser(); }
+
+    // ---- User profiles ----
+    // Read: your own (needed for login role lookup), or admins/super admins.
+    // Super admin: full control. Agency admin: may create & toggle EMPLOYEES in
+    // their OWN agency only (cannot change roles, move agencies, or delete).
+    // Employees: cannot write profiles (no role self-escalation).
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isSuperAdmin() || isAdmin());
+      allow create: if isSuperAdmin()
+        || (isAdmin()
+            && request.resource.data.role == 'employee'
+            && request.resource.data.agencyId == profile().agencyId);
+      allow update: if isSuperAdmin()
+        || (isAdmin()
+            && resource.data.role == 'employee'
+            && resource.data.agencyId == profile().agencyId
+            && request.resource.data.role == 'employee'
+            && request.resource.data.agencyId == profile().agencyId);
+      allow delete: if isSuperAdmin();
+    }
+
+    // ---- Agencies ----
+    match /agencies/{id} {
+      allow read:  if signedIn();
+      allow write: if isSuperAdmin();
+    }
+
+    // Any collection not listed above is denied by default (safe).
+
+    // ── PHASE 2 (later, after every booking doc has agencyId) ──────────────
+    // Replace each booking rule with tenant isolation, e.g.:
+    //   match /bookings/{id} {
+    //     allow read, write: if isSuperAdmin()
+    //       || (activeUser() && resource.data.agencyId == profile().agencyId);
+    //     allow create: if isSuperAdmin()
+    //       || (activeUser() && request.resource.data.agencyId == profile().agencyId);
+    //   }
+  }
+}
